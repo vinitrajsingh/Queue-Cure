@@ -109,14 +109,16 @@ async function runCallNext(clinicId, now) {
   return { active: nextPatient, completed: previousActive };
 }
 
-// No-show: mark the active patient absent and re-queue them at the back with the
-// same tokenNumber, then advance to the next waiting patient.
+// No-show: re-queue the active patient at the back with the same tokenNumber,
+// then advance to the next waiting patient. Priority is reset to 0 on the way
+// out so a no-show urgent patient does not immediately re-win selection ahead of
+// patients who are actually present (which would otherwise loop endlessly).
 export async function skipActive(clinicId) {
   const now = new Date();
   await Patient.findOneAndUpdate(
     { clinicId, status: 'active' },
     {
-      $set: { status: 'waiting', requeuedAt: now, calledAt: null },
+      $set: { status: 'waiting', requeuedAt: now, calledAt: null, priority: 0 },
       $unset: { completedAt: '' }
     }
   );

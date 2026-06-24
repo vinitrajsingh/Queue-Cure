@@ -98,6 +98,30 @@ TTL. The stale-guard is only the backstop for a hard process crash where
 method to throw mid-call and asserts `callLockAt` is `null` afterward and the
 next call-next succeeds immediately.
 
+## The no-show loop bug we found in testing (and how we fixed it)
+
+The no-show flow re-queues the absent patient at the back of the line with the
+same token number, then advances to the next waiting patient. The Phase 3
+receptionist verification exercised a sequence the unit tests had not: mark a
+patient urgent, call them (they go active), then no-show them.
+
+The bug: the re-queued patient still carried `priority: 1` from being urgent. The
+"advance to next" selection sorts by priority first, so the highest-priority
+waiting patient was the no-show we had just re-queued. They were immediately
+re-called, and a receptionist no-showing them again would loop forever, never
+reaching the patients actually present.
+
+The fix is a one-line behavioral decision with a clear rationale: a no-show drops
+their urgent priority back to 0 on the way out. Not showing up forfeits the
+urgent slot. They keep their token number (and `urgentReason` as history) and
+re-enter as a normal waiting patient, so present patients are served ahead of
+someone who is not there. The test "skipping an urgent no-show does not re-call
+them in a loop" locks this in.
+
+This is also a good example of why the verification gate exists: per-unit tests
+of skip and markUrgent both passed in isolation, but the interaction between them
+only surfaced when driving the real sequence a receptionist would perform.
+
 ## The wait-time model
 
 Wait time is never hardcoded. It derives entirely from `ClinicState.ewmaAvg`,

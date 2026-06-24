@@ -181,6 +181,20 @@ async function main() {
     assert.ok(requeued.requeuedAt, 'A flagged requeued so it sorts to back');
   });
 
+  await test('skipping an urgent no-show does not re-call them in a loop', async () => {
+    const a = await emitAck(admin, 'patient:add', { name: 'A', category: 'general' });
+    const b = await emitAck(admin, 'patient:add', { name: 'B', category: 'general' });
+    await emitAck(admin, 'queue:markUrgent', { tokenId: a.tokenId, urgentReason: 'pain' });
+    const first = await emitAck(admin, 'queue:callNext', {}); // A (urgent) active
+    assert.equal(first.active.tokenId, a.tokenId);
+    await emitAck(admin, 'queue:skip', {}); // A no-show
+    const active = await Patient.findOne({ clinicId: CLINIC_ID, status: 'active' });
+    assert.equal(active.tokenId, b.tokenId, 'B is served next, not the no-show urgent A');
+    const requeued = await Patient.findOne({ tokenId: a.tokenId });
+    assert.equal(requeued.priority, 0, 'no-show drops urgent priority so it cannot re-win');
+    assert.equal(requeued.tokenNumber, 1, 'token number still unchanged');
+  });
+
   await test('markUrgent sets priority without changing token number', async () => {
     await emitAck(admin, 'patient:add', { name: 'A', category: 'general' });
     const b = await emitAck(admin, 'patient:add', { name: 'B', category: 'general' });
