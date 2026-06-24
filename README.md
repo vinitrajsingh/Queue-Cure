@@ -164,14 +164,6 @@ scanning the patient QR does); without it those deep links return a 404.
 - The frontend cannot connect: `CLIENT_ORIGIN` on Render does not match the
   Vercel domain.
 
-## Documentation
-
-- [docs/SOCKET-EVENTS.md](docs/SOCKET-EVENTS.md): socket event diagram (Mermaid)
-  and full event reference.
-- [docs/THOUGHT-PROCESS.md](docs/THOUGHT-PROCESS.md): architecture and engineering
-  notes covering concurrency, the wait-time model, the two bugs found in testing
-  and their fixes, and how every edge case is handled and verified.
-
 ## Project structure
 
 ```
@@ -191,7 +183,4 @@ frontend/
     hooks/         useSocket, useLang
     lib/           formatting, i18n dictionary
     pages/         AdminPage, DisplayPage, PatientPage
-docs/
-  SOCKET-EVENTS.md
-  THOUGHT-PROCESS.md
 ```
