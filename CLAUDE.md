@@ -32,7 +32,6 @@ When your changes create orphans:
 - Remove imports/variables/functions that YOUR changes made unused.
 - Don't remove pre-existing dead code unless asked.
 The test: Every changed line should trace directly to the user's request.
-
 ## 4. Goal-Driven Execution
 **Define success criteria. Loop until verified.**
 Transform tasks into verifiable goals:
