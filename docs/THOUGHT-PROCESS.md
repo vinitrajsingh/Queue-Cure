@@ -182,3 +182,32 @@ On connect and on every reconnect, the client emits `queue:sync`, and the server
 responds by broadcasting current state to just that socket. This guarantees a
 client that dropped offline never renders stale data once it returns: its first
 action on reconnect is to pull fresh authoritative state.
+
+## Server-restart persistence
+
+Nothing about the queue lives in process memory. Patients, the EWMA history,
+pause state, and the token counter all persist in MongoDB. The only in-memory
+state is the single-level undo reference (a deliberate, documented limitation:
+undo does not survive a restart) and the live socket connections. We verified
+this by adding two patients over a socket, hard-killing the server process,
+restarting it without re-seeding, and confirming both patients reappeared with
+their token numbers intact.
+
+## Edge case checklist: how each is handled and verified
+
+| Edge case | Handling | Verified by |
+| --- | --- | --- |
+| Double-click Call Next | Atomic conditional lock claim on `ClinicState`; loser is a no-op | integration "double callNext", e2e check 2 |
+| Call Next on empty queue | `findOneAndUpdate` matches nothing, returns `active: null`, broadcast still runs | integration, e2e check 8 |
+| Multiple browser tabs | All clinic sockets share the `clinicId` room and the one broadcast payload | e2e check 1 (admin + display identical) |
+| Server restart | All state in MongoDB; only undo ref is in memory | live kill-and-restart test |
+| Client network drop | `queue:sync` on reconnect pulls fresh state before rendering | e2e check 9 |
+| No-show patient | Re-queued to back with same token, priority reset to avoid re-call loop | integration "skip" + "urgent no-show loop", e2e check 5 |
+| Accidental Call Next | Single-level undo within a 15s client window | integration "undo", e2e check 3 |
+| Doctor break | Wait base offset = remaining break time; EWMA protected on resume | engine break test, integration "EWMA protected across a break", e2e check 6 |
+| Emergency patient | Priority sort jumps them up; token number never rewritten | engine + integration "markUrgent", e2e check 4 |
+| Patient leaves and returns | `tokenId` room is durable; re-scanning the QR resolves to current status | phase 5 re-scan check, e2e check 5 |
+
+The "e2e check N" references are the numbered live checks run end to end against a
+running server through real socket clients, covering admin, display, and patient
+roles simultaneously.
