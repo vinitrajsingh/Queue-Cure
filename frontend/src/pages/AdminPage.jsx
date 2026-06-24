@@ -10,7 +10,8 @@ import BreakControl from '../components/BreakControl.jsx';
 import QrDialog from '../components/QrDialog.jsx';
 import UrgentDialog from '../components/UrgentDialog.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
-import { IconNext, IconUndo, IconSkip, IconAlert } from '../components/icons.jsx';
+import CastDialog from '../components/CastDialog.jsx';
+import { IconNext, IconUndo, IconSkip, IconAlert, IconTv } from '../components/icons.jsx';
 
 const UNDO_WINDOW_MS = 15000;
 
@@ -26,6 +27,7 @@ export default function AdminPage() {
   const [newPatient, setNewPatient] = useState(null);
   const [urgentTarget, setUrgentTarget] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [showCast, setShowCast] = useState(false);
   const [undoUntil, setUndoUntil] = useState(0);
   const [now, setNow] = useState(Date.now());
 
@@ -99,7 +101,13 @@ export default function AdminPage() {
           <h1 className="text-2xl font-bold text-clinic-ink">Reception</h1>
           <p className="text-sm text-clinic-muted">Queue Cure admin</p>
         </div>
-        <ConnectionStatus connected={connected} />
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" size="sm" onClick={() => setShowCast(true)}>
+            <IconTv className="h-4 w-4" />
+            Show on TV
+          </Button>
+          <ConnectionStatus connected={connected} />
+        </div>
       </header>
 
       <div className="mb-5">
@@ -185,6 +193,7 @@ export default function AdminPage() {
         )}
       </div>
 
+      <CastDialog open={showCast} onClose={() => setShowCast(false)} />
       <QrDialog patient={newPatient} onClose={() => setNewPatient(null)} />
       <UrgentDialog
         patient={urgentTarget}

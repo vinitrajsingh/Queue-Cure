@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSocket } from '../hooks/useSocket.js';
 import BreakScreen from '../components/BreakScreen.jsx';
+import FullscreenButton from '../components/FullscreenButton.jsx';
 import { CATEGORY_LABELS } from '../lib/format.js';
 
 const NEXT_COUNT = 5;
@@ -31,7 +32,8 @@ export default function DisplayPage() {
 
   if (paused) {
     return (
-      <div className="h-screen w-screen overflow-hidden">
+      <div className="relative h-screen w-screen overflow-hidden">
+        <FullscreenButton />
         <BreakScreen
           seconds={queue.break.breakRemaining}
           scale="tv"
@@ -46,7 +48,8 @@ export default function DisplayPage() {
   const next = (queue?.waiting ?? []).slice(0, NEXT_COUNT);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-clinic-ink text-white">
+    <div className="relative flex h-screen w-screen overflow-hidden bg-clinic-ink text-white">
+      <FullscreenButton />
       <section className="flex flex-[1.6] flex-col items-center justify-center border-r border-white/10 px-[3vw]">
         <p className="text-[2.4vw] font-semibold uppercase tracking-[0.2em] text-teal-300">
           Now serving
