@@ -22,6 +22,9 @@ yarn-error.log*
 .vite/
 coverage/
 
+# Claude
+CLAUDE.md
+
 # Editor / OS
 .vscode/
 .idea/
