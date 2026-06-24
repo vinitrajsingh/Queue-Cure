@@ -9,7 +9,11 @@ import { registerSocketHandlers } from './sockets/handlers.js';
 
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/queue-cure';
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+// Accepts a comma-separated list so the app can be reached from the host machine
+// and from phones/TVs on the LAN at the same time.
+const CLIENT_ORIGIN = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim());
 
 async function start() {
   await connectDb(MONGO_URI);
